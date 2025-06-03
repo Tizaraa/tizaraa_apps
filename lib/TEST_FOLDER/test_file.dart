@@ -673,60 +673,364 @@ class _TaxReturnState extends State<TaxReturn> with TickerProviderStateMixin {
     if (!_isWebViewInitialized) return;
 
     const script = '''
-      (function() {
-        // Hide bottom navigation elements
-        const bottomNavSelectors = [
-          '.bottom-nav',
-          '.bottom-navigation',
-          '.navbar-bottom',
-          '.footer-nav',
-          '.mobile-nav',
-          '.tab-bar',
-          '.bottom-bar',
-          '.mobile-bottom-nav',
-          '[role="tablist"]',
-          '.navbar-fixed-bottom',
-          '.bottom-menu',
-          '.footer',
-          '.site-footer',
-          '.bottom-container',
-          '.mobile-footer'
-        ];
+    (function() {
+      // Enhanced footer hiding for Tizaraa website - targeting specific structure
+      const footerSelectors = [
+        // Generic footer selectors
+        'footer',
+        '.footer',
+        '#footer',
+        'main footer',
         
-        bottomNavSelectors.forEach(selector => {
+        // Tizaraa specific classes from the HTML structure
+        '.sc-744a8572-0.jJjcPR[style*="background-color: rgb(45, 343, 68)"]',
+        '.sc-98d8f3ef-0.jXXGHW',
+        '.sc-699459e9-0.gtzLrm',
+        '.sc-699459e9-0.gcgxHo',
+        '.sc-699459e9-0.gfPnOt',
+        
+        // Target by background color (the green footer)
+        '[style*="background-color: rgb(45, 343, 68)"]',
+        '[style*="background-color:rgb(45,343,68)"]',
+        '[style*="background-color:#2dd744"]',
+        
+        // Target parent containers that might contain the footer
+        'main[style*="position: relative"]',
+        
+        // All other footer patterns
+        '.site-footer',
+        '.main-footer',
+        '.page-footer',
+        '.bottom-footer',
+        '.footer-container',
+        '.footer-wrapper',
+        '.footer-content',
+        '.footer-section',
+        '.footer-area',
+        '.footer-zone',
+        '.footer-main',
+        '.footer-primary',
+        '.footer-secondary',
+        '.bottom-nav',
+        '.bottom-navigation',
+        '.navbar-bottom',
+        '.footer-nav',
+        '.mobile-nav',
+        '.tab-bar',
+        '.bottom-bar',
+        '.mobile-bottom-nav',
+        '[role="tablist"]',
+        '.navbar-fixed-bottom',
+        '.bottom-menu',
+        '.bottom-container',
+        '.mobile-footer',
+        '.tizaraa-footer',
+        '#tizaraa-footer',
+        '.footer-widget',
+        '.footer-links',
+        '.footer-menu',
+        '.footer-social',
+        '.footer-info',
+        '.footer-copyright',
+        '.footer-bottom',
+        '.footer-top',
+        '.footer-middle',
+        '.customer-service',
+        '.help-footer',
+        '.support-footer',
+        '.contact-footer',
+        '.social-footer',
+        '.newsletter-footer',
+        '.subscribe-footer',
+        '.company-info',
+        '.footer-policies',
+        '.footer-terms',
+        '.footer-privacy',
+        '.container-fluid footer',
+        '.row footer',
+        '.col footer',
+        '[class*="footer"]',
+        '[id*="footer"]'
+      ];
+      
+      // Hide elements by selectors
+      footerSelectors.forEach(selector => {
+        try {
           const elements = document.querySelectorAll(selector);
           elements.forEach(element => {
             element.style.display = 'none !important';
             element.style.visibility = 'hidden !important';
             element.style.height = '0px !important';
+            element.style.maxHeight = '0px !important';
             element.style.overflow = 'hidden !important';
+            element.style.margin = '0px !important';
+            element.style.padding = '0px !important';
+            element.style.border = 'none !important';
           });
+        } catch (e) {
+          console.log('Error with selector:', selector, e);
+        }
+      });
+      
+      // First, directly target the specific Tizaraa footer structure
+      try {
+        // Target the main footer element
+        const mainFooters = document.querySelectorAll('main footer');
+        mainFooters.forEach(footer => {
+          footer.style.display = 'none !important';
+          footer.style.visibility = 'hidden !important';
+          footer.style.height = '0px !important';
+          footer.style.overflow = 'hidden !important';
+          footer.remove(); // Completely remove it
         });
         
-        // Remove bottom padding since we're using floating buttons
-        document.body.style.paddingBottom = '20px';
+        // Target by the specific green background color
+        const greenElements = document.querySelectorAll('[style*="background-color: rgb(45, 343, 68)"], [style*="background-color:rgb(45,343,68)"]');
+        greenElements.forEach(element => {
+          element.style.display = 'none !important';
+          element.style.visibility = 'hidden !important';
+          element.style.height = '0px !important';
+          element.style.overflow = 'hidden !important';
+          element.remove(); // Completely remove it
+        });
         
-        // Also check for fixed positioned elements at bottom
-        const allElements = document.querySelectorAll('*');
-        allElements.forEach(element => {
-          const style = window.getComputedStyle(element);
-          if (style.position === 'fixed' && 
-              (style.bottom === '0px' || parseInt(style.bottom) <= 80)) {
-            if (element.offsetHeight < 120) {
-              element.style.display = 'none !important';
+        // Target elements containing specific Tizaraa footer text
+        const tizaraaFooterTexts = [
+          'Customer Services',
+          'Order Tracking',
+          'Shipping & Delivery',
+          'Return and Refund Policy',
+          'About Tizaraa',
+          'Privacy policy',
+          'Terms and Conditions',
+          'Earn With Tizaraa',
+          'Sell on Tizaraa',
+          'DBID',
+          'Trade License',
+          'TRAD/DNCC/010245/2024',
+          'Registration ID : 144381902',
+          'Trade services',
+          'info@tizaraa.com',
+          '+8801792223444',
+          'OpenTrade Commerce'
+        ];
+        
+        document.querySelectorAll('*').forEach(element => {
+          const text = element.textContent || element.innerText || '';
+          if (tizaraaFooterTexts.some(footerText => text.includes(footerText))) {
+            // Find the closest parent that might be the footer container
+            let parent = element;
+            while (parent && parent !== document.body) {
+              if (parent.tagName === 'FOOTER' || 
+                  parent.style.backgroundColor === 'rgb(45, 343, 68)' ||
+                  parent.className.includes('footer')) {
+                parent.style.display = 'none !important';
+                parent.style.visibility = 'hidden !important';
+                parent.style.height = '0px !important';
+                parent.style.overflow = 'hidden !important';
+                parent.remove(); // Completely remove it
+                break;
+              }
+              parent = parent.parentElement;
             }
           }
         });
+      } catch (e) {
+        console.log('Error in specific Tizaraa footer targeting:', e);
+      }
+
+      // Hide by text content (common footer texts)
+      const footerTexts = [
+        'Copyright',
+        '©',
+        'All rights reserved',
+        'Terms of Service',
+        'Privacy Policy',
+        'Contact Us',
+        'About Us',
+        'Customer Services',
+        'Customer Service',
+        'Help Center',
+        'Support',
+        'Newsletter',
+        'Subscribe',
+        'Follow us',
+        'Social Media',
+        'Facebook',
+        'Twitter',
+        'Instagram',
+        'Tizaraa',
+        'Company',
+        'Legal',
+        'Sitemap',
+        'Order Tracking',
+        'Shipping',
+        'Delivery',
+        'Return',
+        'Refund',
+        'Replacement',
+        'DBID',
+        'Trade License',
+        'OpenTrade',
+        'Commerce'
+      ];
+      
+      const allElements = document.querySelectorAll('*');
+      allElements.forEach(element => {
+        try {
+          const text = (element.textContent || element.innerText || '').toLowerCase();
+          const hasFooterText = footerTexts.some(footerText => 
+            text.includes(footerText.toLowerCase())
+          );
+          
+          if (hasFooterText) {
+            // Check if this element is likely a footer (positioned at bottom)
+            const rect = element.getBoundingClientRect();
+            const windowHeight = window.innerHeight;
+            
+            // If element is in bottom 30% of viewport or below viewport
+            if (rect.top > windowHeight * 0.7 || rect.bottom > windowHeight) {
+              element.style.display = 'none !important';
+              element.style.visibility = 'hidden !important';
+              element.style.height = '0px !important';
+              element.style.overflow = 'hidden !important';
+            }
+          }
+        } catch (e) {
+          // Continue with next element
+        }
+      });
+      
+      // Hide fixed positioned elements at bottom
+      allElements.forEach(element => {
+        try {
+          const style = window.getComputedStyle(element);
+          if ((style.position === 'fixed' || style.position === 'sticky') && 
+              (style.bottom === '0px' || parseInt(style.bottom) <= 100)) {
+            // Don't hide if it's very small (might be important UI element)
+            if (element.offsetHeight > 30) {
+              element.style.display = 'none !important';
+              element.style.visibility = 'hidden !important';
+            }
+          }
+        } catch (e) {
+          // Continue with next element
+        }
+      });
+      
+      // Remove bottom padding/margin from body and html
+      document.body.style.paddingBottom = '0px !important';
+      document.body.style.marginBottom = '0px !important';
+      document.documentElement.style.paddingBottom = '0px !important';
+      document.documentElement.style.marginBottom = '0px !important';
+      
+      // Hide elements that are positioned at the very bottom of the page
+      const pageHeight = Math.max(
+        document.body.scrollHeight,
+        document.body.offsetHeight,
+        document.documentElement.clientHeight,
+        document.documentElement.scrollHeight,
+        document.documentElement.offsetHeight
+      );
+      
+      allElements.forEach(element => {
+        try {
+          const rect = element.getBoundingClientRect();
+          const elementTop = rect.top + window.pageYOffset;
+          
+          // If element is in bottom 20% of total page height
+          if (elementTop > pageHeight * 0.8) {
+            const tagName = element.tagName.toLowerCase();
+            // Only hide likely footer elements, not content
+            if (tagName === 'footer' || 
+                element.className.toLowerCase().includes('footer') ||
+                element.id.toLowerCase().includes('footer') ||
+                (element.textContent || '').toLowerCase().includes('copyright') ||
+                (element.textContent || '').toLowerCase().includes('©')) {
+              element.style.display = 'none !important';
+              element.style.visibility = 'hidden !important';
+            }
+          }
+        } catch (e) {
+          // Continue with next element
+        }
+      });
+      
+      // Additional aggressive footer removal
+      try {
+        // Remove any element that contains the payment banner image
+        const paymentBanners = document.querySelectorAll('img[src*="Payment Banner"], img[alt="Payment"]');
+        paymentBanners.forEach(img => {
+          let parent = img.parentElement;
+          while (parent && parent !== document.body) {
+            if (parent.tagName === 'FOOTER' || 
+                parent.style.backgroundColor === 'rgb(45, 343, 68)') {
+              parent.remove();
+              break;
+            }
+            parent = parent.parentElement;
+          }
+        });
         
-        console.log('Bottom navigation hidden');
-      })();
-    ''';
+        // Remove any element that contains the OpenTrade Commerce link/image  
+        const openTradeElements = document.querySelectorAll('a[href*="otcommerce.com"], img[src*="otCommerce.png"]');
+        openTradeElements.forEach(element => {
+          let parent = element.parentElement;
+          while (parent && parent !== document.body) {
+            if (parent.tagName === 'FOOTER' || 
+                parent.style.backgroundColor === 'rgb(45, 343, 68)') {
+              parent.remove();
+              break;
+            }
+            parent = parent.parentElement;
+          }
+        });
+        
+        // Remove any element containing social media links with specific patterns
+        const socialElements = document.querySelectorAll('a[href*="youtube.com"], a[href*="instagram.com"], a[href*="facebook.com"], img[src*="youtube.png"], img[src*="instagram.png"], img[src*="facebook"]');
+        socialElements.forEach(element => {
+          let parent = element.parentElement;
+          while (parent && parent !== document.body) {
+            if (parent.tagName === 'FOOTER' || 
+                parent.style.backgroundColor === 'rgb(45, 343, 68)') {
+              parent.remove();
+              break;
+            }
+            parent = parent.parentElement;
+          }
+        });
+      } catch (e) {
+        console.log('Error in additional footer removal:', e);
+      }
+    })();
+  ''';
 
     try {
       await _controller.runJavaScript(script);
-      debugPrint('Bottom bar hiding script executed successfully');
+      debugPrint('Enhanced footer hiding script executed successfully');
+
+      // Execute again after a delay to ensure it catches dynamically loaded content
+      Future.delayed(const Duration(seconds: 2), () async {
+        try {
+          await _controller.runJavaScript(script);
+          debugPrint('Enhanced footer hiding script executed again (delayed)');
+        } catch (e) {
+          debugPrint('Error in delayed footer hiding execution: $e');
+        }
+      });
+
+      // Execute once more after page is fully settled
+      Future.delayed(const Duration(seconds: 5), () async {
+        try {
+          await _controller.runJavaScript(script);
+          debugPrint('Enhanced footer hiding script executed final time');
+        } catch (e) {
+          debugPrint('Error in final footer hiding execution: $e');
+        }
+      });
+
     } catch (e) {
-      debugPrint('Error hiding webview bottom bar: $e');
+      debugPrint('Error hiding webview footer: $e');
     }
   }
 
