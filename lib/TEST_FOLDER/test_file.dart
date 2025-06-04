@@ -40,6 +40,7 @@ class _TaxReturnState extends State<TaxReturn> with TickerProviderStateMixin {
     super.dispose();
   }
 
+
   Future<void> _initializeWebView() async {
     try {
       _controller = WebViewController()
@@ -65,8 +66,10 @@ class _TaxReturnState extends State<TaxReturn> with TickerProviderStateMixin {
                 _injectCartMonitoringScript();
                 _hideWebViewBottomBar();
                 _setInitialZoom();
-                _forceMobileView(); // Added to force mobile view
-                _hideHeaderElements(); // Added to hide header elements
+                _forceMobileView();
+                _hideHeaderElements();
+                _resizeButtons();
+                _ensureContentVisibility();
               });
             },
             onWebResourceError: (WebResourceError error) {
@@ -105,288 +108,85 @@ class _TaxReturnState extends State<TaxReturn> with TickerProviderStateMixin {
     }
   }
 
+  Future<void> _resizeButtons() async {
+    if (!_isWebViewInitialized) return;
+
+    const script = '''
+    (function() {
+      const checkoutButtons = document.querySelectorAll(
+        'button, a.btn, input[type="submit"], .btn-checkout, .checkout-button'
+      );
+      
+      checkoutButtons.forEach(button => {
+        button.style.fontSize = '14px !important';
+        button.style.padding = '8px 12px !important';
+        button.style.height = 'auto !important';
+      });
+      
+      const navIcons = document.querySelectorAll(
+        '.nav-icon, .home-icon, .menu-icon, [class*="icon"]'
+      );
+      
+      navIcons.forEach(icon => {
+        icon.style.width = '24px !important';
+        icon.style.height = '24px !important';
+        icon.style.fontSize = '24px !important';
+      });
+      
+      console.log('Buttons and icons resized');
+    })();
+    ''';
+
+    try {
+      await _controller.runJavaScript(script);
+      debugPrint('Button resizing script executed successfully');
+    } catch (e) {
+      debugPrint('Error resizing buttons: $e');
+    }
+  }
+
   Future<void> _hideHeaderElements() async {
     if (!_isWebViewInitialized) return;
 
     const script = '''
     (function() {
-      // First method: Hide by specific selectors
       const headerSelectors = [
-        'header', 
-        '.header',
-        '#header',
         '.site-header',
         '.main-header',
-        '.page-header',
         '.top-header',
         '.header-container',
-        '.header-wrapper',
-        '.header-content',
         '.header-logo',
-        '.header-title',
         '.site-name',
         '.site-title',
         '.logo',
-        '.branding',
         '.language-selector',
-        '.lang-switcher',
         '.currency-selector',
-        '.header-actions',
-        '.header-top',
-        '.header-bottom',
-        '.header-middle',
-        '.header-nav',
-        '.header-menu',
-        '.header-tools',
-        '.header-search',
-        '.search-box',
-        '.search-container',
-        '.search-wrapper',
-        '.search-bar',
-        '.header-main', // Specific to your site
-        '.header-primary', // Specific to your site
-        '.header-secondary', // Specific to your site
-        '.header-row', // Specific to your site
-        '.header-col', // Specific to your site
-        '.header-section', // Specific to your site
-        '.header-block', // Specific to your site
-        '.header-element', // Specific to your site
-        '.header-component', // Specific to your site
-        '.header-widget', // Specific to your site
-        '.header-module', // Specific to your site
-        '.header-area', // Specific to your site
-        '.header-zone', // Specific to your site
-        '.header-space', // Specific to your site
-        '.header-spacer', // Specific to your site
-        '.header-gap', // Specific to your site
-        '.header-padding', // Specific to your site
-        '.header-margin', // Specific to your site
-        '.header-border', // Specific to your site
-        '.header-divider', // Specific to your site
-        '.header-separator', // Specific to your site
-        '.header-line', // Specific to your site
-        '.header-rule', // Specific to your site
-        '.header-break', // Specific to your site
-        '.header-hr', // Specific to your site
-        '.header-br', // Specific to your site
-        // Add more specific selectors from your site
-        '#tizaraa-header',
-        '.tizaraa-header',
-        '.main-logo',
-        '.site-logo',
-        '.header-logo',
-        '.header-brand',
-        '.header-identity',
-        '.header-name',
-        '.header-text',
-        '.header-heading',
-        '.header-h1',
-        '.header-h2',
-        '.header-h3',
-        '.header-h4',
-        '.header-h5',
-        '.header-h6',
-        '.header-p',
-        '.header-span',
-        '.header-div',
-        '.header-section',
-        '.header-article',
-        '.header-aside',
-        '.header-nav',
-        '.header-ul',
-        '.header-ol',
-        '.header-li',
-        '.header-a',
-        '.header-button',
-        '.header-input',
-        '.header-select',
-        '.header-form',
-        '.header-label',
-        '.header-field',
-        '.header-control',
-        '.header-group',
-        '.header-row',
-        '.header-col',
-        '.header-cell',
-        '.header-item',
-        '.header-block',
-        '.header-box',
-        '.header-card',
-        '.header-panel',
-        '.header-tab',
-        '.header-accordion',
-        '.header-slider',
-        '.header-carousel',
-        '.header-gallery',
-        '.header-image',
-        '.header-video',
-        '.header-media',
-        '.header-icon',
-        '.header-symbol',
-        '.header-badge',
-        '.header-notification',
-        '.header-alert',
-        '.header-message',
-        '.header-popup',
-        '.header-modal',
-        '.header-dialog',
-        '.header-overlay',
-        '.header-backdrop',
-        '.header-cover',
-        '.header-mask',
-        '.header-filter',
-        '.header-effect',
-        '.header-animation',
-        '.header-transition',
-        '.header-transform',
-        '.header-perspective',
-        '.header-3d',
-        '.header-parallax',
-        '.header-scroll',
-        '.header-fixed',
-        '.header-sticky',
-        '.header-static',
-        '.header-relative',
-        '.header-absolute',
-        '.header-fixed-top',
-        '.header-fixed-bottom',
-        '.header-sticky-top',
-        '.header-sticky-bottom',
-        '.header-pinned',
-        '.header-floating',
-        '.header-docked',
-        '.header-anchored',
-        '.header-attached',
-        '.header-detached',
-        '.header-positioned',
-        '.header-layered',
-        '.header-stacked',
-        '.header-z-index',
-        '.header-elevation',
-        '.header-shadow',
-        '.header-border',
-        '.header-outline',
-        '.header-frame',
-        '.header-container',
-        '.header-wrapper',
-        '.header-inner',
-        '.header-content',
-        '.header-body',
-        '.header-main',
-        '.header-section',
-        '.header-article',
-        '.header-aside',
-        '.header-footer',
-        '.header-sidebar',
-        '.header-column',
-        '.header-row',
-        '.header-grid',
-        '.header-flex',
-        '.header-layout',
-        '.header-structure',
-        '.header-system',
-        '.header-theme',
-        '.header-skin',
-        '.header-style',
-        '.header-design',
-        '.header-template',
-        '.header-pattern',
-        '.header-scheme',
-        '.header-palette',
-        '.header-color',
-        '.header-bg',
-        '.header-background',
-        '.header-image',
-        '.header-video',
-        '.header-media',
-        '.header-overlay',
-        '.header-mask',
-        '.header-filter',
-        '.header-effect',
-        '.header-blur',
-        '.header-opacity',
-        '.header-transparency',
-        '.header-gradient',
-        '.header-shade',
-        '.header-tint',
-        '.header-tone',
-        '.header-hue',
-        '.header-saturation',
-        '.header-lightness',
-        '.header-brightness',
-        '.header-contrast',
-        '.header-invert',
-        '.header-sepia',
-        '.header-grayscale',
-        '.header-blend',
-        '.header-mode',
-        '.header-composite',
-        '.header-mix',
-        '.header-overlay',
-        '.header-multiply',
-        '.header-screen',
-        '.header-overlay',
-        '.header-darken',
-        '.header-lighten',
-        '.header-color-dodge',
-        '.header-color-burn',
-        '.header-hard-light',
-        '.header-soft-light',
-        '.header-difference',
-        '.header-exclusion',
-        '.header-hue',
-        '.header-saturation',
-        '.header-color',
-        '.header-luminosity'
+        '.header__lang-select',
+        '.header__currency-select'
       ];
 
-      // Second method: Hide by text content
-      const textElements = document.querySelectorAll('*');
-      textElements.forEach(element => {
-        const text = element.textContent || element.innerText || '';
-        if (text.includes('Tizaraa') || 
-            text.includes('Search by Name') || 
-            text.includes('PROTECTING WHAT MATTERS MOST')) {
+      headerSelectors.forEach(selector => {
+        const elements = document.querySelectorAll(selector);
+        elements.forEach(element => {
           element.style.display = 'none !important';
           element.style.visibility = 'hidden !important';
-          element.style.height = '0 !important';
-          element.style.margin = '0 !important';
-          element.style.padding = '0 !important';
-        }
+          element.style.height = '0px !important';
+          element.style.overflow = 'hidden !important';
+        });
       });
 
-      // Third method: Hide by position (top of page)
-      const allElements = document.querySelectorAll('*');
-      allElements.forEach(element => {
-        const rect = element.getBoundingClientRect();
-        if (rect.top < 200) { // If element is near top of page
-          const style = window.getComputedStyle(element);
-          if (style.position === 'fixed' || style.position === 'sticky') {
-            element.style.display = 'none !important';
-          }
-        }
-      });
-
-      // Fourth method: Remove empty space at top
       document.body.style.paddingTop = '0 !important';
       document.body.style.marginTop = '0 !important';
       
-      // Fifth method: Force scroll to top to prevent any header from showing
       window.scrollTo(0, 0);
       
       console.log('Header elements hidden');
     })();
-  ''';
+    ''';
 
     try {
       await _controller.runJavaScript(script);
       debugPrint('Header hiding script executed successfully');
-
-      // Run it again after a delay to ensure it sticks
-      Future.delayed(const Duration(seconds: 3), () async {
-        await _controller.runJavaScript(script);
-        debugPrint('Header hiding script executed again');
-      });
     } catch (e) {
       debugPrint('Error hiding header elements: $e');
     }
@@ -396,36 +196,25 @@ class _TaxReturnState extends State<TaxReturn> with TickerProviderStateMixin {
     if (!_isWebViewInitialized) return;
 
     const script = '''
-      (function() {
-        // Force mobile viewport settings
-        let viewport = document.querySelector('meta[name="viewport"]');
-        if (viewport) {
-          viewport.setAttribute('content', 'width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no');
-        } else {
-          let meta = document.createElement('meta');
-          meta.name = 'viewport';
-          meta.content = 'width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no';
-          document.getElementsByTagName('head')[0].appendChild(meta);
-        }
+    (function() {
+      let viewport = document.querySelector('meta[name="viewport"]');
+      if (viewport) {
+        viewport.setAttribute('content', 'width=device-width, initial-scale=1.0, maximum-scale=2.0, user-scalable=yes');
+      } else {
+        let meta = document.createElement('meta');
+        meta.name = 'viewport';
+        meta.content = 'width=device-width, initial-scale=1.0, maximum-scale=2.0, user-scalable=yes';
+        document.getElementsByTagName('head')[0].appendChild(meta);
+      }
 
-        // Set body to fit mobile screen
-        document.body.style.width = '100%';
-        document.body.style.maxWidth = '100vw';
-        document.body.style.overflowX = 'hidden';
-        document.body.style.margin = '0';
-        document.body.style.padding = '0';
+      document.body.style.width = '100%';
+      document.body.style.maxWidth = '100vw';
+      document.body.style.overflowX = 'hidden';
+      document.body.style.margin = '0';
+      document.body.style.padding = '0';
 
-        // Disable desktop-specific styles
-        const desktopStyles = document.querySelectorAll('style, link[rel="stylesheet"]');
-        desktopStyles.forEach(style => {
-          const cssText = style.textContent || style.innerHTML || '';
-          if (cssText.includes('min-width') || cssText.includes('@media screen and (min-width')) {
-            style.disabled = true;
-          }
-        });
-
-        console.log('Mobile zoom and layout settings applied');
-      })();
+      console.log('Mobile zoom and layout settings applied');
+    })();
     ''';
 
     try {
@@ -440,88 +229,48 @@ class _TaxReturnState extends State<TaxReturn> with TickerProviderStateMixin {
     if (!_isWebViewInitialized) return;
 
     const script = '''
-      (function() {
-        // Hide desktop-specific elements and potentially unwanted header elements
-        const desktopSelectors = [
-          '.desktop-nav',
-          '.header-desktop',
-          '.sidebar',
-          '.footer-desktop',
-          '.nav-desktop',
-          '.banner-desktop',
-          '.top-bar',
-          '.header-bar',
-          '[class*="desktop"]',
-          '[class*="header"]',
-          '[class*="footer"]',
-          '[class*="sidebar"]',
-          // Added selectors to hide site name, language, and logo
-          '.site-name',
-          '.site-logo',
-          '.header-logo',
-          '.language-selector',
-          '.currency-selector',
-          '#header-name',
-          '#header-logo',
-          '.header__logo',
-          '.header__name',
-          '.header__lang-select',
-          '.header__currency-select',
-          '.top-header', // Often contains branding/language
-          '.header-main', // Often contains main header elements
-          'h1.site-title', // Common for site names
-          '.header-actions .language-switcher', // Example for language selector
-          '.header-actions .currency-switcher' // Example for currency selector
-        ];
+    (function() {
+      const desktopSelectors = [
+        '.desktop-nav',
+        '.header-desktop',
+        '.footer-desktop',
+        '.nav-desktop',
+        '.banner-desktop',
+        '.top-bar'
+      ];
 
-        desktopSelectors.forEach(selector => {
-          const elements = document.querySelectorAll(selector);
-          elements.forEach(element => {
-            element.style.display = 'none !important';
-            element.style.visibility = 'hidden !important';
-            element.style.height = '0px !important';
-            element.style.overflow = 'hidden !important';
-          });
+      desktopSelectors.forEach(selector => {
+        const elements = document.querySelectorAll(selector);
+        elements.forEach(element => {
+          element.style.display = 'none !important';
+          element.style.visibility = 'hidden !important';
         });
+      });
 
-        // Force mobile-specific classes to be visible
-        const mobileSelectors = [
-          '.mobile-nav',
-          '.mobile-menu',
-          '.mobile-content',
-          '[class*="mobile"]'
-        ];
+      const mobileSelectors = [
+        '.mobile-nav',
+        '.mobile-menu',
+        '.mobile-content'
+      ];
 
-        mobileSelectors.forEach(selector => {
-          const elements = document.querySelectorAll(selector);
-          elements.forEach(element => {
-            element.style.display = 'block !important';
-            element.style.visibility = 'visible !important';
-          });
+      mobileSelectors.forEach(selector => {
+        const elements = document.querySelectorAll(selector);
+        elements.forEach(element => {
+          element.style.display = 'block !important';
+          element.style.visibility = 'visible !important';
         });
+      });
 
-        // Adjust container widths for mobile
-        const containers = document.querySelectorAll('.container, .wrapper, .main-content');
-        containers.forEach(container => {
-          container.style.width = '100%';
-          container.style.maxWidth = '100vw';
-          container.style.padding = '0 10px';
-          container.style.boxSizing = 'border-box';
-        });
+      const containers = document.querySelectorAll('.container, .wrapper, .main-content');
+      containers.forEach(container => {
+        container.style.width = '100%';
+        container.style.maxWidth = '100vw';
+        container.style.padding = '0 10px';
+        container.style.boxSizing = 'border-box';
+      });
 
-        // Remove fixed positioning that might interfere
-        const fixedElements = document.querySelectorAll('[style*="position: fixed"]');
-        fixedElements.forEach(element => {
-          const style = window.getComputedStyle(element);
-          if (parseInt(style.top) < 100 && parseInt(style.bottom) < 100) {
-            element.style.position = 'relative';
-            element.style.top = 'auto';
-            element.style.bottom = 'auto';
-          }
-        });
-
-        console.log('Mobile view optimizations applied');
-      })();
+      console.log('Mobile view optimizations applied');
+    })();
     ''';
 
     try {
@@ -532,133 +281,158 @@ class _TaxReturnState extends State<TaxReturn> with TickerProviderStateMixin {
     }
   }
 
+  Future<void> _ensureContentVisibility() async {
+    if (!_isWebViewInitialized) return;
+
+    const script = '''
+    (function() {
+      const mainContent = document.querySelectorAll('main, .main, .content, .main-content, .product-grid, .products, .category-products');
+      mainContent.forEach(element => {
+        element.style.display = 'block !important';
+        element.style.visibility = 'visible !important';
+        element.style.opacity = '1 !important';
+        element.style.height = 'auto !important';
+        element.style.minHeight = '100% !important';
+      });
+
+      const productItems = document.querySelectorAll('.product, .product-item, .item, .product-card');
+      productItems.forEach(item => {
+        item.style.display = 'block !important';
+        item.style.visibility = 'visible !important';
+        item.style.opacity = '1 !important';
+        item.style.height = 'auto !important';
+      });
+
+      console.log('Main content and products visibility ensured');
+    })();
+    ''';
+
+    try {
+      await _controller.runJavaScript(script);
+      debugPrint('Content visibility script executed successfully');
+    } catch (e) {
+      debugPrint('Error ensuring content visibility: $e');
+    }
+  }
+
   Future<void> _injectCartMonitoringScript() async {
     if (!_isWebViewInitialized) return;
 
     const script = '''
-      (function() {
-        console.log('Cart monitoring script started');
+    (function() {
+      console.log('Cart monitoring script started');
+      
+      let lastCartCount = 0;
+      
+      function getCartCount() {
+        let count = 0;
         
-        let lastCartCount = 0;
+        const cartBadgeSelectors = [
+          '.cart-count',
+          '.cart-counter', 
+          '.badge',
+          '.cart-badge',
+          '.header-cart-count',
+          '.minicart-count',
+          '.cart-qty',
+          '.cart-quantity',
+          '[data-cart-count]',
+          '.shopping-cart-count',
+          '.cart-item-count',
+          '.navbar-cart-count'
+        ];
         
-        function getCartCount() {
-          let count = 0;
-          
-          // Method 1: Check for cart badge/counter elements
-          const cartBadgeSelectors = [
-            '.cart-count',
-            '.cart-counter', 
-            '.badge',
-            '.cart-badge',
-            '.header-cart-count',
-            '.minicart-count',
-            '.cart-qty',
-            '.cart-quantity',
-            '[data-cart-count]',
-            '.shopping-cart-count',
-            '.cart-item-count',
-            '.navbar-cart-count'
-          ];
-          
-          for (let selector of cartBadgeSelectors) {
-            const elements = document.querySelectorAll(selector);
-            for (let element of elements) {
-              const text = element.textContent || element.innerText || element.getAttribute('data-count') || '';
-              const num = parseInt(text.replace(/[^0-9]/g, ''));
-              if (!isNaN(num) && num > count) {
-                count = num;
-              }
-            }
-          }
-          
-          // Method 2: Check localStorage for cart data
-          try {
-            const cartData = localStorage.getItem('cart') || localStorage.getItem('shopping_cart') || localStorage.getItem('cartItems');
-            if (cartData) {
-              const parsed = JSON.parse(cartData);
-              if (Array.isArray(parsed)) {
-                count = Math.max(count, parsed.length);
-              } else if (parsed.items && Array.isArray(parsed.items)) {
-                count = Math.max(count, parsed.items.length);
-              } else if (typeof parsed === 'object' && parsed.count) {
-                count = Math.max(count, parseInt(parsed.count));
-              }
-            }
-          } catch (e) {
-            console.log('Error reading cart from localStorage:', e);
-          }
-          
-          // Method 3: Check global cart variables
-          try {
-            if (window.cart && Array.isArray(window.cart)) {
-              count = Math.max(count, window.cart.length);
-            }
-            if (window.cartItems && Array.isArray(window.cartItems)) {
-              count = Math.max(count, window.cartItems.length);
-            }
-          } catch (e) {
-            console.log('Error checking global cart variables:', e);
-          }
-          
-          return count;
-        }
-        
-        function updateCartCount() {
-          const currentCount = getCartCount();
-          
-          if (currentCount !== lastCartCount) {
-            lastCartCount = currentCount;
-            console.log('Cart count changed to:', currentCount);
-            
-            // Send to Flutter app
-            if (window.CartCounter) {
-              CartCounter.postMessage(currentCount.toString());
+        for (let selector of cartBadgeSelectors) {
+          const elements = document.querySelectorAll(selector);
+          for (let element of elements) {
+            const text = element.textContent || element.innerText || element.getAttribute('data-count') || '';
+            const num = parseInt(text.replace(/[^0-9]/g, ''));
+            if (!isNaN(num) && num > count) {
+              count = num;
             }
           }
         }
         
-        // Initial check
-        setTimeout(updateCartCount, 1000);
-        
-        // Monitor DOM changes
-        const observer = new MutationObserver(function(mutations) {
-          setTimeout(updateCartCount, 500);
-        });
-        
-        observer.observe(document.body, {
-          childList: true,
-          subtree: true,
-          attributes: true,
-          characterData: true
-        });
-        
-        // Monitor localStorage changes
-        const originalSetItem = localStorage.setItem;
-        localStorage.setItem = function(key, value) {
-          originalSetItem.apply(this, arguments);
-          if (key.toLowerCase().includes('cart')) {
-            setTimeout(updateCartCount, 200);
-          }
-        };
-        
-        // Monitor clicks on add to cart buttons
-        document.addEventListener('click', function(e) {
-          const target = e.target;
-          const button = target.closest('button, a, .btn');
-          if (button) {
-            const text = button.textContent || button.innerText || '';
-            if (text.toLowerCase().includes('add') && 
-                (text.toLowerCase().includes('cart') || text.toLowerCase().includes('bag'))) {
-              setTimeout(updateCartCount, 1000);
+        try {
+          const cartData = localStorage.getItem('cart') || localStorage.getItem('shopping_cart') || localStorage.getItem('cartItems');
+          if (cartData) {
+            const parsed = JSON.parse(cartData);
+            if (Array.isArray(parsed)) {
+              count = Math.max(count, parsed.length);
+            } else if (parsed.items && Array.isArray(parsed.items)) {
+              count = Math.max(count, parsed.items.length);
+            } else if (typeof parsed === 'object' && parsed.count) {
+              count = Math.max(count, parseInt(parsed.count));
             }
           }
-        });
+        } catch (e) {
+          console.log('Error reading cart from localStorage:', e);
+        }
         
-        // Periodic check every 3 seconds
-        setInterval(updateCartCount, 3000);
+        try {
+          if (window.cart && Array.isArray(window.cart)) {
+            count = Math.max(count, window.cart.length);
+          }
+          if (window.cartItems && Array.isArray(window.cartItems)) {
+            count = Math.max(count, window.cartItems.length);
+          }
+        } catch (e) {
+          console.log('Error checking global cart variables:', e);
+        }
         
-        console.log('Cart monitoring initialized');
-      })();
+        return count;
+      }
+      
+      function updateCartCount() {
+        const currentCount = getCartCount();
+        
+        if (currentCount !== lastCartCount) {
+          lastCartCount = currentCount;
+          console.log('Cart count changed to:', currentCount);
+          
+          if (window.CartCounter) {
+            CartCounter.postMessage(currentCount.toString());
+          }
+        }
+      }
+      
+      setTimeout(updateCartCount, 1000);
+      
+      const observer = new MutationObserver(function(mutations) {
+        setTimeout(updateCartCount, 500);
+      });
+      
+      observer.observe(document.body, {
+        childList: true,
+        subtree: true,
+        attributes: true,
+        characterData: true
+      });
+      
+      const originalSetItem = localStorage.setItem;
+      localStorage.setItem = function(key, value) {
+        originalSetItem.apply(this, arguments);
+        if (key.toLowerCase().includes('cart')) {
+          setTimeout(updateCartCount, 200);
+        }
+      };
+      
+      document.addEventListener('click', function(e) {
+        const target = e.target;
+        const button = target.closest('button, a, .btn');
+        if (button) {
+          const text = button.textContent || button.innerText || '';
+          if (text.toLowerCase().includes('add') && 
+              (text.toLowerCase().includes('cart') || text.toLowerCase().includes('bag'))) {
+            setTimeout(updateCartCount, 1000);
+          }
+        }
+      });
+      
+      setInterval(updateCartCount, 3000);
+      
+      console.log('Cart monitoring initialized');
+    })();
     ''';
 
     try {
@@ -674,86 +448,14 @@ class _TaxReturnState extends State<TaxReturn> with TickerProviderStateMixin {
 
     const script = '''
     (function() {
-      // Enhanced footer hiding for Tizaraa website - targeting specific structure
       const footerSelectors = [
-        // Generic footer selectors
         'footer',
         '.footer',
         '#footer',
-        'main footer',
-        
-        // Tizaraa specific classes from the HTML structure
-        '.sc-744a8572-0.jJjcPR[style*="background-color: rgb(45, 343, 68)"]',
-        '.sc-98d8f3ef-0.jXXGHW',
-        '.sc-699459e9-0.gtzLrm',
-        '.sc-699459e9-0.gcgxHo',
-        '.sc-699459e9-0.gfPnOt',
-        
-        // Target by background color (the green footer)
-        '[style*="background-color: rgb(45, 343, 68)"]',
-        '[style*="background-color:rgb(45,343,68)"]',
-        '[style*="background-color:#2dd744"]',
-        
-        // Target parent containers that might contain the footer
-        'main[style*="position: relative"]',
-        
-        // All other footer patterns
         '.site-footer',
-        '.main-footer',
-        '.page-footer',
-        '.bottom-footer',
-        '.footer-container',
-        '.footer-wrapper',
-        '.footer-content',
-        '.footer-section',
-        '.footer-area',
-        '.footer-zone',
-        '.footer-main',
-        '.footer-primary',
-        '.footer-secondary',
-        '.bottom-nav',
-        '.bottom-navigation',
-        '.navbar-bottom',
-        '.footer-nav',
-        '.mobile-nav',
-        '.tab-bar',
-        '.bottom-bar',
-        '.mobile-bottom-nav',
-        '[role="tablist"]',
-        '.navbar-fixed-bottom',
-        '.bottom-menu',
-        '.bottom-container',
-        '.mobile-footer',
-        '.tizaraa-footer',
-        '#tizaraa-footer',
-        '.footer-widget',
-        '.footer-links',
-        '.footer-menu',
-        '.footer-social',
-        '.footer-info',
-        '.footer-copyright',
-        '.footer-bottom',
-        '.footer-top',
-        '.footer-middle',
-        '.customer-service',
-        '.help-footer',
-        '.support-footer',
-        '.contact-footer',
-        '.social-footer',
-        '.newsletter-footer',
-        '.subscribe-footer',
-        '.company-info',
-        '.footer-policies',
-        '.footer-terms',
-        '.footer-privacy',
-        '.container-fluid footer',
-        '.row footer',
-        '.col footer',
-        '[class*="footer"]',
-        '[id*="footer"]'
+        '.footer-container'
       ];
       
-      // Hide elements by selectors
       footerSelectors.forEach(selector => {
         try {
           const elements = document.querySelectorAll(selector);
@@ -765,270 +467,40 @@ class _TaxReturnState extends State<TaxReturn> with TickerProviderStateMixin {
             element.style.overflow = 'hidden !important';
             element.style.margin = '0px !important';
             element.style.padding = '0px !important';
-            element.style.border = 'none !important';
           });
         } catch (e) {
-          console.log('Error with selector:', selector, e);
+          console.log('Error with footer selector:', selector, e);
         }
       });
-      
-      // First, directly target the specific Tizaraa footer structure
-      try {
-        // Target the main footer element
-        const mainFooters = document.querySelectorAll('main footer');
-        mainFooters.forEach(footer => {
-          footer.style.display = 'none !important';
-          footer.style.visibility = 'hidden !important';
-          footer.style.height = '0px !important';
-          footer.style.overflow = 'hidden !important';
-          footer.remove(); // Completely remove it
-        });
-        
-        // Target by the specific green background color
-        const greenElements = document.querySelectorAll('[style*="background-color: rgb(45, 343, 68)"], [style*="background-color:rgb(45,343,68)"]');
-        greenElements.forEach(element => {
-          element.style.display = 'none !important';
-          element.style.visibility = 'hidden !important';
-          element.style.height = '0px !important';
-          element.style.overflow = 'hidden !important';
-          element.remove(); // Completely remove it
-        });
-        
-        // Target elements containing specific Tizaraa footer text
-        const tizaraaFooterTexts = [
-          'Customer Services',
-          'Order Tracking',
-          'Shipping & Delivery',
-          'Return and Refund Policy',
-          'About Tizaraa',
-          'Privacy policy',
-          'Terms and Conditions',
-          'Earn With Tizaraa',
-          'Sell on Tizaraa',
-          'DBID',
-          'Trade License',
-          'TRAD/DNCC/010245/2024',
-          'Registration ID : 144381902',
-          'Trade services',
-          'info@tizaraa.com',
-          '+8801792223444',
-          'OpenTrade Commerce'
-        ];
-        
-        document.querySelectorAll('*').forEach(element => {
-          const text = element.textContent || element.innerText || '';
-          if (tizaraaFooterTexts.some(footerText => text.includes(footerText))) {
-            // Find the closest parent that might be the footer container
-            let parent = element;
-            while (parent && parent !== document.body) {
-              if (parent.tagName === 'FOOTER' || 
-                  parent.style.backgroundColor === 'rgb(45, 343, 68)' ||
-                  parent.className.includes('footer')) {
-                parent.style.display = 'none !important';
-                parent.style.visibility = 'hidden !important';
-                parent.style.height = '0px !important';
-                parent.style.overflow = 'hidden !important';
-                parent.remove(); // Completely remove it
-                break;
-              }
-              parent = parent.parentElement;
-            }
-          }
-        });
-      } catch (e) {
-        console.log('Error in specific Tizaraa footer targeting:', e);
-      }
 
-      // Hide by text content (common footer texts)
-      const footerTexts = [
-        'Copyright',
-        '©',
-        'All rights reserved',
-        'Terms of Service',
-        'Privacy Policy',
-        'Contact Us',
-        'About Us',
-        'Customer Services',
-        'Customer Service',
-        'Help Center',
-        'Support',
-        'Newsletter',
-        'Subscribe',
-        'Follow us',
-        'Social Media',
-        'Facebook',
-        'Twitter',
-        'Instagram',
-        'Tizaraa',
-        'Company',
-        'Legal',
-        'Sitemap',
-        'Order Tracking',
-        'Shipping',
-        'Delivery',
-        'Return',
-        'Refund',
-        'Replacement',
-        'DBID',
-        'Trade License',
-        'OpenTrade',
-        'Commerce'
-      ];
-      
+      const footerTexts = ['copyright', '©', 'all rights reserved', 'terms', 'privacy', 'footer'];
       const allElements = document.querySelectorAll('*');
       allElements.forEach(element => {
         try {
           const text = (element.textContent || element.innerText || '').toLowerCase();
-          const hasFooterText = footerTexts.some(footerText => 
-            text.includes(footerText.toLowerCase())
-          );
-          
-          if (hasFooterText) {
-            // Check if this element is likely a footer (positioned at bottom)
+          if (footerTexts.some(footerText => text.includes(footerText))) {
             const rect = element.getBoundingClientRect();
             const windowHeight = window.innerHeight;
-            
-            // If element is in bottom 30% of viewport or below viewport
-            if (rect.top > windowHeight * 0.7 || rect.bottom > windowHeight) {
-              element.style.display = 'none !important';
-              element.style.visibility = 'hidden !important';
-              element.style.height = '0px !important';
-              element.style.overflow = 'hidden !important';
-            }
-          }
-        } catch (e) {
-          // Continue with next element
-        }
-      });
-      
-      // Hide fixed positioned elements at bottom
-      allElements.forEach(element => {
-        try {
-          const style = window.getComputedStyle(element);
-          if ((style.position === 'fixed' || style.position === 'sticky') && 
-              (style.bottom === '0px' || parseInt(style.bottom) <= 100)) {
-            // Don't hide if it's very small (might be important UI element)
-            if (element.offsetHeight > 30) {
+            if (rect.top > windowHeight * 0.7) {
               element.style.display = 'none !important';
               element.style.visibility = 'hidden !important';
             }
           }
-        } catch (e) {
-          // Continue with next element
-        }
+        } catch (e) {}
       });
-      
-      // Remove bottom padding/margin from body and html
+
       document.body.style.paddingBottom = '0px !important';
       document.body.style.marginBottom = '0px !important';
       document.documentElement.style.paddingBottom = '0px !important';
       document.documentElement.style.marginBottom = '0px !important';
-      
-      // Hide elements that are positioned at the very bottom of the page
-      const pageHeight = Math.max(
-        document.body.scrollHeight,
-        document.body.offsetHeight,
-        document.documentElement.clientHeight,
-        document.documentElement.scrollHeight,
-        document.documentElement.offsetHeight
-      );
-      
-      allElements.forEach(element => {
-        try {
-          const rect = element.getBoundingClientRect();
-          const elementTop = rect.top + window.pageYOffset;
-          
-          // If element is in bottom 20% of total page height
-          if (elementTop > pageHeight * 0.8) {
-            const tagName = element.tagName.toLowerCase();
-            // Only hide likely footer elements, not content
-            if (tagName === 'footer' || 
-                element.className.toLowerCase().includes('footer') ||
-                element.id.toLowerCase().includes('footer') ||
-                (element.textContent || '').toLowerCase().includes('copyright') ||
-                (element.textContent || '').toLowerCase().includes('©')) {
-              element.style.display = 'none !important';
-              element.style.visibility = 'hidden !important';
-            }
-          }
-        } catch (e) {
-          // Continue with next element
-        }
-      });
-      
-      // Additional aggressive footer removal
-      try {
-        // Remove any element that contains the payment banner image
-        const paymentBanners = document.querySelectorAll('img[src*="Payment Banner"], img[alt="Payment"]');
-        paymentBanners.forEach(img => {
-          let parent = img.parentElement;
-          while (parent && parent !== document.body) {
-            if (parent.tagName === 'FOOTER' || 
-                parent.style.backgroundColor === 'rgb(45, 343, 68)') {
-              parent.remove();
-              break;
-            }
-            parent = parent.parentElement;
-          }
-        });
-        
-        // Remove any element that contains the OpenTrade Commerce link/image  
-        const openTradeElements = document.querySelectorAll('a[href*="otcommerce.com"], img[src*="otCommerce.png"]');
-        openTradeElements.forEach(element => {
-          let parent = element.parentElement;
-          while (parent && parent !== document.body) {
-            if (parent.tagName === 'FOOTER' || 
-                parent.style.backgroundColor === 'rgb(45, 343, 68)') {
-              parent.remove();
-              break;
-            }
-            parent = parent.parentElement;
-          }
-        });
-        
-        // Remove any element containing social media links with specific patterns
-        const socialElements = document.querySelectorAll('a[href*="youtube.com"], a[href*="instagram.com"], a[href*="facebook.com"], img[src*="youtube.png"], img[src*="instagram.png"], img[src*="facebook"]');
-        socialElements.forEach(element => {
-          let parent = element.parentElement;
-          while (parent && parent !== document.body) {
-            if (parent.tagName === 'FOOTER' || 
-                parent.style.backgroundColor === 'rgb(45, 343, 68)') {
-              parent.remove();
-              break;
-            }
-            parent = parent.parentElement;
-          }
-        });
-      } catch (e) {
-        console.log('Error in additional footer removal:', e);
-      }
+
+      console.log('Footer elements hidden');
     })();
-  ''';
+    ''';
 
     try {
       await _controller.runJavaScript(script);
-      debugPrint('Enhanced footer hiding script executed successfully');
-
-      // Execute again after a delay to ensure it catches dynamically loaded content
-      Future.delayed(const Duration(seconds: 2), () async {
-        try {
-          await _controller.runJavaScript(script);
-          debugPrint('Enhanced footer hiding script executed again (delayed)');
-        } catch (e) {
-          debugPrint('Error in delayed footer hiding execution: $e');
-        }
-      });
-
-      // Execute once more after page is fully settled
-      Future.delayed(const Duration(seconds: 5), () async {
-        try {
-          await _controller.runJavaScript(script);
-          debugPrint('Enhanced footer hiding script executed final time');
-        } catch (e) {
-          debugPrint('Error in final footer hiding execution: $e');
-        }
-      });
-
+      debugPrint('Footer hiding script executed successfully');
     } catch (e) {
       debugPrint('Error hiding webview footer: $e');
     }
@@ -1054,7 +526,6 @@ class _TaxReturnState extends State<TaxReturn> with TickerProviderStateMixin {
 
     if (!_isWebViewInitialized) return;
 
-    // Navigate to different sections
     String url = 'https://www.tizaraa.com';
     switch (index) {
       case 0: // Home
@@ -1085,19 +556,15 @@ class _TaxReturnState extends State<TaxReturn> with TickerProviderStateMixin {
             CircularProgressIndicator(
               valueColor: AlwaysStoppedAnimation<Color>(Color(0xFFFF6B35)),
             ),
-            SizedBox(height: 16),
-            Text('Loading Tizaraa...'),
           ],
         ),
       )
           : Stack(
         children: [
-          // Full screen WebView with background
           Container(
-            color: const Color(0xFFF8F9FA), // Slightly warmer background
+            color: const Color(0xFFF8F9FA),
             child: Column(
               children: [
-                // Enhanced App Bar
                 Container(
                   padding: EdgeInsets.only(
                     top: MediaQuery.of(context).padding.top + 12,
@@ -1106,43 +573,27 @@ class _TaxReturnState extends State<TaxReturn> with TickerProviderStateMixin {
                     bottom: 16,
                   ),
                 ),
-
-                // Progress Indicator
                 if (_isLoading)
                   LinearProgressIndicator(
                     value: _progress,
                     backgroundColor: Colors.grey[200],
                     valueColor: const AlwaysStoppedAnimation<Color>(Color(0xFFFF6B35)),
                   ),
-
-                // Expanded WebView
                 Expanded(
                   child: WebViewWidget(controller: _controller),
                 ),
               ],
             ),
           ),
-
           Positioned(
             child: AnimatedEcommerceHeader(),
-              // child: Container(
-              //   height: 112,
-              //   width: MediaQuery.of(context).size.width,
-              //   color: Colors.red[400],
-              //   child: Center(child: Padding(
-              //     padding: const EdgeInsets.only(top: 30),
-              //     child: Text("Tizaraa",style: TextStyle(color: Colors.white,fontSize: 25),),
-              //   )),
-              // ),
           ),
-          // Floating Action Buttons for Navigation
           Positioned(
-            bottom: 0, // Changed to 0 to make it full width at the bottom
+            bottom: 0,
             left: 0,
             right: 0,
             child: Column(
               children: [
-                // Cart Count Badge
                 if (_cartItemCount > 0)
                   Container(
                     margin: const EdgeInsets.only(bottom: 10),
@@ -1166,14 +617,10 @@ class _TaxReturnState extends State<TaxReturn> with TickerProviderStateMixin {
                       ),
                     ),
                   ),
-
-                // Bottom Navigation Bar with Floating Buttons
                 Container(
-                  // Removed horizontal margin for full width
                   padding: const EdgeInsets.symmetric(vertical: 8),
                   decoration: BoxDecoration(
                     color: Colors.white,
-                    // Removed borderRadius
                     boxShadow: [
                       BoxShadow(
                         color: Colors.black.withOpacity(0.2),
@@ -1212,7 +659,7 @@ class _TaxReturnState extends State<TaxReturn> with TickerProviderStateMixin {
               Icon(
                 icon,
                 color: isSelected ? const Color(0xFFFF6B35) : Colors.grey[600],
-                size: 28,
+                size: 24,
               ),
               if (showBadge && _cartItemCount > 0)
                 Positioned(
