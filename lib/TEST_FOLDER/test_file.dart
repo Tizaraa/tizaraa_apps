@@ -16,30 +16,17 @@ class _TaxReturnState extends State<TaxReturn> with TickerProviderStateMixin {
   double _progress = 0;
   bool _isWebViewInitialized = false;
   int _currentIndex = 0;
-  bool _isMenuOpen = false;
-  late AnimationController _animationController;
-  late Animation<double> _animation;
 
   @override
   void initState() {
     super.initState();
-    _animationController = AnimationController(
-      duration: const Duration(milliseconds: 300),
-      vsync: this,
-    );
-    _animation = CurvedAnimation(
-      parent: _animationController,
-      curve: Curves.easeInOut,
-    );
     _initializeWebView();
   }
 
   @override
   void dispose() {
-    _animationController.dispose();
     super.dispose();
   }
-
 
   Future<void> _initializeWebView() async {
     try {
@@ -61,7 +48,6 @@ class _TaxReturnState extends State<TaxReturn> with TickerProviderStateMixin {
             },
             onPageFinished: (String url) {
               setState(() => _isLoading = false);
-              // Inject scripts after page loads
               Future.delayed(const Duration(seconds: 2), () {
                 _injectCartMonitoringScript();
                 _hideWebViewBottomBar();
@@ -70,6 +56,7 @@ class _TaxReturnState extends State<TaxReturn> with TickerProviderStateMixin {
                 _hideHeaderElements();
                 _resizeButtons();
                 _ensureContentVisibility();
+                _highlightBrandDeliveryInfo(); // New method to highlight brand/delivery
               });
             },
             onWebResourceError: (WebResourceError error) {
@@ -105,6 +92,86 @@ class _TaxReturnState extends State<TaxReturn> with TickerProviderStateMixin {
       setState(() {
         _isWebViewInitialized = true;
       });
+    }
+  }
+
+  // New method to highlight and ensure brand/delivery info is visible
+  Future<void> _highlightBrandDeliveryInfo() async {
+    if (!_isWebViewInitialized) return;
+
+    const script = '''
+    (function() {
+      console.log('Highlighting brand and delivery information...');
+      
+      // Target the specific brand/delivery container and elements
+      const brandDeliveryContainer = document.querySelector('.sc-744a8572-0 eZlinV');
+      const brandDeliveryElements = document.querySelectorAll('.sc-744a8572-0 eZlinV');
+      
+      if (brandDeliveryContainer) {
+        // Make sure the container is visible and styled nicely
+        brandDeliveryContainer.style.setProperty('display', 'block', 'important');
+        brandDeliveryContainer.style.setProperty('visibility', 'visible', 'important');
+        brandDeliveryContainer.style.setProperty('opacity', '1', 'important');
+        brandDeliveryContainer.style.setProperty('background-color', '#f8f9fa', 'important');
+        brandDeliveryContainer.style.setProperty('padding', '12px', 'important');
+        brandDeliveryContainer.style.setProperty('margin', '8px 0', 'important');
+        brandDeliveryContainer.style.setProperty('border-radius', '8px', 'important');
+        brandDeliveryContainer.style.setProperty('border', '1px solid #e9ecef', 'important');
+        brandDeliveryContainer.style.setProperty('position', 'relative', 'important');
+        brandDeliveryContainer.style.setProperty('z-index', '999', 'important');
+        
+        console.log('Brand/Delivery container styled successfully');
+      }
+      
+      // Style individual brand and delivery elements
+      brandDeliveryElements.forEach((element, index) => {
+        element.style.setProperty('display', 'block', 'important');
+        element.style.setProperty('visibility', 'visible', 'important');
+        element.style.setProperty('opacity', '1', 'important');
+        element.style.setProperty('font-size', '14px', 'important');
+        element.style.setProperty('color', '#6c757d', 'important');
+        element.style.setProperty('margin', '4px 0', 'important');
+        element.style.setProperty('font-weight', '500', 'important');
+        element.style.setProperty('line-height', '1.4', 'important');
+        
+        // Add icons for better visual appeal
+        const text = element.textContent.trim();
+        if (text.includes('Brand:')) {
+          element.style.setProperty('position', 'relative', 'important');
+          element.innerHTML = '🏷️ ' + text;
+        } else if (text.includes('Delivery:')) {
+          element.style.setProperty('position', 'relative', 'important');
+          element.innerHTML = '🚚 ' + text;
+        }
+        
+        console.log('Brand/Delivery element ' + index + ' styled: ' + text);
+      });
+      
+      // Ensure the parent elements don't hide these
+      const allParents = [];
+      if (brandDeliveryContainer) {
+        let parent = brandDeliveryContainer.parentElement;
+        while (parent && parent !== document.body) {
+          allParents.push(parent);
+          parent = parent.parentElement;
+        }
+      }
+      
+      allParents.forEach(parent => {
+        parent.style.setProperty('display', 'block', 'important');
+        parent.style.setProperty('visibility', 'visible', 'important');
+        parent.style.setProperty('opacity', '1', 'important');
+      });
+      
+      console.log('Brand and delivery information highlighting completed');
+    })();
+    ''';
+
+    try {
+      await _controller.runJavaScript(script);
+      debugPrint('Brand/Delivery highlighting script executed successfully');
+    } catch (e) {
+      debugPrint('Error highlighting brand/delivery info: $e');
     }
   }
 
@@ -157,7 +224,6 @@ class _TaxReturnState extends State<TaxReturn> with TickerProviderStateMixin {
         '.header-container',
         '.header-logo',
         '.site-name',
-        '.site-title',
         '.logo',
         '.language-selector',
         '.currency-selector',
@@ -168,6 +234,12 @@ class _TaxReturnState extends State<TaxReturn> with TickerProviderStateMixin {
       headerSelectors.forEach(selector => {
         const elements = document.querySelectorAll(selector);
         elements.forEach(element => {
+          // Skip if it contains brand/delivery info
+          if (element.querySelector('.sc-744a8572-0 eZlinV') || 
+              element.querySelector('.sc-744a8572-0 eZlinV')) {
+            return;
+          }
+          
           element.style.display = 'none !important';
           element.style.visibility = 'hidden !important';
           element.style.height = '0px !important';
@@ -180,7 +252,7 @@ class _TaxReturnState extends State<TaxReturn> with TickerProviderStateMixin {
       
       window.scrollTo(0, 0);
       
-      console.log('Header elements hidden');
+      console.log('Header elements hidden (preserving brand/delivery)');
     })();
     ''';
 
@@ -242,6 +314,12 @@ class _TaxReturnState extends State<TaxReturn> with TickerProviderStateMixin {
       desktopSelectors.forEach(selector => {
         const elements = document.querySelectorAll(selector);
         elements.forEach(element => {
+          // Skip if contains brand/delivery info
+          if (element.querySelector('.sc-744a8572-0 eZlinV') || 
+              element.querySelector('.sc-744a8572-0 eZlinV')) {
+            return;
+          }
+          
           element.style.display = 'none !important';
           element.style.visibility = 'hidden !important';
         });
@@ -269,7 +347,7 @@ class _TaxReturnState extends State<TaxReturn> with TickerProviderStateMixin {
         container.style.boxSizing = 'border-box';
       });
 
-      console.log('Mobile view optimizations applied');
+      console.log('Mobile view optimizations applied (preserving brand/delivery)');
     })();
     ''';
 
@@ -303,6 +381,14 @@ class _TaxReturnState extends State<TaxReturn> with TickerProviderStateMixin {
         item.style.height = 'auto !important';
       });
 
+      // Ensure brand/delivery elements are always visible
+      const brandDeliveryElements = document.querySelectorAll('.sc-744a8572-0 eZlinV, .sc-744a8572-0 eZlinV');
+      brandDeliveryElements.forEach(element => {
+        element.style.display = 'block !important';
+        element.style.visibility = 'visible !important';
+        element.style.opacity = '1 !important';
+      });
+
       console.log('Main content and products visibility ensured');
     })();
     ''';
@@ -328,18 +414,12 @@ class _TaxReturnState extends State<TaxReturn> with TickerProviderStateMixin {
         let count = 0;
         
         const cartBadgeSelectors = [
-          '.cart-count',
-          '.cart-counter', 
           '.badge',
           '.cart-badge',
           '.header-cart-count',
           '.minicart-count',
           '.cart-qty',
           '.cart-quantity',
-          '[data-cart-count]',
-          '.shopping-cart-count',
-          '.cart-item-count',
-          '.navbar-cart-count'
         ];
         
         for (let selector of cartBadgeSelectors) {
@@ -448,81 +528,178 @@ class _TaxReturnState extends State<TaxReturn> with TickerProviderStateMixin {
 
     const script = '''
     (function() {
+      console.log('Starting to hide website footer sections...');
+      
       const footerSelectors = [
         'footer',
         '.footer',
-        '#footer',
-        '.site-footer',
-        '.footer-container'
+        '#footer'
       ];
       
       footerSelectors.forEach(selector => {
         try {
           const elements = document.querySelectorAll(selector);
+          
           elements.forEach(element => {
-            element.style.display = 'none !important';
-            element.style.visibility = 'hidden !important';
-            element.style.height = '0px !important';
-            element.style.maxHeight = '0px !important';
-            element.style.overflow = 'hidden !important';
-            element.style.margin = '0px !important';
-            element.style.padding = '0px !important';
-          });
-        } catch (e) {
-          console.log('Error with footer selector:', selector, e);
-        }
-      });
-
-      const footerTexts = ['copyright', '©', 'all rights reserved', 'terms', 'privacy', 'footer'];
-      const allElements = document.querySelectorAll('*');
-      allElements.forEach(element => {
-        try {
-          const text = (element.textContent || element.innerText || '').toLowerCase();
-          if (footerTexts.some(footerText => text.includes(footerText))) {
+            // IMPORTANT: Skip elements that contain brand or delivery divs
+            if (element.querySelector('.sc-744a8572-0 eZlinV') || 
+                element.querySelector('.sc-744a8572-0 eZlinV')) {
+              console.log('Preserving footer element with brand/delivery info');
+              return;
+            }
+            
             const rect = element.getBoundingClientRect();
             const windowHeight = window.innerHeight;
-            if (rect.top > windowHeight * 0.7) {
-              element.style.display = 'none !important';
-              element.style.visibility = 'hidden !important';
+            const elementText = (element.textContent || '').toLowerCase();
+            
+            const isLikelyFooter = (
+              rect.top > windowHeight * 0.5 ||
+              elementText.includes('copyright') ||
+              elementText.includes('©') ||
+              elementText.includes('all rights reserved') ||
+              elementText.includes('terms of service') ||
+              elementText.includes('privacy policy') ||
+              elementText.includes('contact us') ||
+              elementText.includes('about us') ||
+              selector.toLowerCase().includes('footer')
+            );
+            
+            const isEssentialCart = (
+              elementText.includes('add to cart') ||
+              elementText.includes('checkout') ||
+              elementText.includes('place order') ||
+              elementText.includes('proceed to checkout') ||
+              elementText.includes('total:') ||
+              elementText.includes('subtotal:') ||
+              elementText.includes('quantity') ||
+              elementText.includes('remove from cart') ||
+              elementText.includes('brand:') ||
+              elementText.includes('delivery:') ||
+              element.querySelector('button[type="submit"]') ||
+              element.querySelector('.btn-checkout') ||
+              element.querySelector('.checkout-btn') ||
+              element.querySelector('.add-to-cart') ||
+              element.closest('.cart-summary') ||
+              element.closest('.checkout-summary')
+            );
+            
+            if (isLikelyFooter && !isEssentialCart) {
+              console.log('Hiding footer element:', selector);
+              element.style.setProperty('display', 'none', 'important');
+              element.style.setProperty('visibility', 'hidden', 'important');
+              element.style.setProperty('height', '0px', 'important');
+              element.style.setProperty('max-height', '0px', 'important');
+              element.style.setProperty('overflow', 'hidden', 'important');
+              element.style.setProperty('margin', '0px', 'important');
+              element.style.setProperty('padding', '0px', 'important');
+              element.style.setProperty('opacity', '0', 'important');
+            }
+          });
+        } catch (e) {
+          console.log('Error processing footer selector:', selector, e);
+        }
+      });
+      
+      // Handle other text elements but preserve brand/delivery
+      const allTextElements = document.querySelectorAll('*');
+      allTextElements.forEach(element => {
+        try {
+          // CRITICAL: Skip brand/delivery elements
+          if (element.classList.contains('sc-744a8572-0') || 
+              element.classList.contains('sc-a04e3fd4-0') ||
+              element.classList.contains('eZlinV') ||
+              element.classList.contains('ezmVRN')) {
+            return;
+          }
+          
+          const text = (element.textContent || element.innerText || '').trim().toLowerCase();
+          
+          if (text.length > 500) return;
+          
+          const cartTerms = [
+            'add to cart', 'checkout', 'place order', 'total:', 'subtotal:', 
+            'quantity', 'price:', 'remove', 'brand:', 'delivery:'
+          ];
+          if (cartTerms.some(term => text.includes(term))) return;
+          
+          const footerIndicators = [
+            'copyright', '©', 'all rights reserved',
+            'terms of service', 'terms of use', 'terms & conditions',
+            'privacy policy', 'cookie policy',
+            'contact us', 'about us', 'help center',
+            'follow us', 'social media',
+            'newsletter', 'subscribe',
+            'site map', 'sitemap'
+          ];
+          
+          const hasFooterContent = footerIndicators.some(indicator => text.includes(indicator));
+          
+          if (hasFooterContent) {
+            const rect = element.getBoundingClientRect();
+            const windowHeight = window.innerHeight;
+            
+            if (rect.top > windowHeight * 0.6) {
+              console.log('Hiding footer content element:', text.substring(0, 50));
+              element.style.setProperty('display', 'none', 'important');
+              element.style.setProperty('visibility', 'hidden', 'important');
+              element.style.setProperty('opacity', '0', 'important');
             }
           }
         } catch (e) {}
       });
-
-      document.body.style.paddingBottom = '0px !important';
-      document.body.style.marginBottom = '0px !important';
-      document.documentElement.style.paddingBottom = '0px !important';
-      document.documentElement.style.marginBottom = '0px !important';
-
-      console.log('Footer elements hidden');
+      
+      document.body.style.setProperty('padding-bottom', '0px', 'important');
+      document.body.style.setProperty('margin-bottom', '0px', 'important');
+      
+      const htmlElement = document.documentElement;
+      htmlElement.style.setProperty('padding-bottom', '0px', 'important');
+      htmlElement.style.setProperty('margin-bottom', '0px', 'important');
+      
+      const stickyElements = document.querySelectorAll('[style*="position: fixed"], [style*="position: sticky"]');
+      stickyElements.forEach(element => {
+        // CRITICAL: Skip brand/delivery elements
+        if (element.classList.contains('sc-744a8572-0') || 
+            element.classList.contains('sc-a04e3fd4-0') ||
+            element.classList.contains('eZlinV') ||
+            element.classList.contains('ezmVRN')) {
+          return;
+        }
+        
+        const style = window.getComputedStyle(element);
+        const bottom = style.bottom;
+        
+        if (bottom === '0px' || parseInt(bottom) >= 0) {
+          const text = (element.textContent || '').toLowerCase();
+          const isFooterLike = text.includes('copyright') || text.includes('©') || text.includes('terms') || text.includes('privacy');
+          const isCartFunctional = text.includes('checkout') || text.includes('add to cart') || text.includes('total') || 
+                                  text.includes('brand:') || text.includes('delivery:');
+          
+          if (isFooterLike && !isCartFunctional) {
+            console.log('Hiding sticky footer element');
+            element.style.setProperty('display', 'none', 'important');
+            element.style.setProperty('visibility', 'hidden', 'important');
+          }
+        }
+      });
+      
+      document.body.offsetHeight;
+      
+      console.log('Website footer hiding completed (brand/delivery preserved)');
     })();
     ''';
 
     try {
       await _controller.runJavaScript(script);
-      debugPrint('Footer hiding script executed successfully');
+      debugPrint('Website footer hiding script executed successfully');
     } catch (e) {
-      debugPrint('Error hiding webview footer: $e');
-    }
-  }
-
-  void _toggleMenu() {
-    setState(() {
-      _isMenuOpen = !_isMenuOpen;
-    });
-    if (_isMenuOpen) {
-      _animationController.forward();
-    } else {
-      _animationController.reverse();
+      debugPrint('Error hiding website footer: $e');
     }
   }
 
   void _onNavTap(int index) {
     setState(() {
       _currentIndex = index;
-      _isMenuOpen = false;
     });
-    _animationController.reverse();
 
     if (!_isWebViewInitialized) return;
 
